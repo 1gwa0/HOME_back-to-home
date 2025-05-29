@@ -1,0 +1,95 @@
+{\rtf1\ansi\ansicpg950\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!-- index.html \uc0\u31684 \u20363 \u65306 \u20320 \u21487 \u20197 \u29992 \u36889 \u20491  -->\
+<!DOCTYPE html>\
+<html lang="zh-Hant">\
+<head>\
+  <meta charset="UTF-8">\
+  <title>\uc0\u22810 \u27169 \u26495 \u22294 \u29255 \u21512 \u25104 \u22120 </title>\
+  <style>\
+    body \{ font-family: sans-serif; text-align: center; padding: 20px; \}\
+    canvas \{ border: 1px solid #ccc; margin-top: 10px; display: block; margin: 10px auto; \}\
+    .templates img \{\
+      width: 120px;\
+      margin: 5px;\
+      cursor: pointer;\
+      border: 2px solid transparent;\
+      border-radius: 8px;\
+    \}\
+    .templates img.selected \{ border-color: #f90; \}\
+  </style>\
+</head>\
+<body>\
+  <h2>\uc0\u19978 \u20659 \u29031 \u29255  \u8594  \u36984 \u25799 \u27169 \u26495  \u8594  \u22871 \u22294 \u19979 \u36617 </h2>\
+  <input type="file" id="upload" accept="image/*" />\
+  <div class="templates" id="template-list">\
+    <img src="template1.png" data-template="template1.png" class="selected" />\
+    <img src="template2.png" data-template="template2.png" />\
+  </div>\
+  <button id="download">\uc0\u19979 \u36617 \u22294 \u29255 </button>\
+  <canvas id="canvas" width="800" height="1000"></canvas>\
+  <script>\
+    const upload = document.getElementById('upload');\
+    const canvas = document.getElementById('canvas');\
+    const ctx = canvas.getContext('2d');\
+    const downloadBtn = document.getElementById('download');\
+    const templateList = document.getElementById('template-list');\
+\
+    let currentTemplateSrc = 'template1.png';\
+    let uploadedImg = null;\
+\
+    templateList.addEventListener('click', (e) => \{\
+      if (e.target.tagName === 'IMG') \{\
+        document.querySelectorAll('.templates img').forEach(img => img.classList.remove('selected'));\
+        e.target.classList.add('selected');\
+        currentTemplateSrc = e.target.dataset.template;\
+        if (uploadedImg) drawCombined();\
+      \}\
+    \});\
+\
+    upload.addEventListener('change', (e) => \{\
+      const file = e.target.files[0];\
+      if (!file) return;\
+      const reader = new FileReader();\
+      reader.onload = (event) => \{\
+        uploadedImg = new Image();\
+        uploadedImg.onload = () => drawCombined();\
+        uploadedImg.src = event.target.result;\
+      \};\
+      reader.readAsDataURL(file);\
+    \});\
+\
+    function drawCombined() \{\
+      ctx.clearRect(0, 0, canvas.width, canvas.height);\
+      const scale = Math.min(canvas.width / uploadedImg.width, canvas.height / uploadedImg.height);\
+      const imgWidth = uploadedImg.width * scale;\
+      const imgHeight = uploadedImg.height * scale;\
+      const x = (canvas.width - imgWidth) / 2;\
+      const y = (canvas.height - imgHeight) / 2;\
+      ctx.drawImage(uploadedImg, x, y, imgWidth, imgHeight);\
+\
+      const templateImg = new Image();\
+      templateImg.onload = () => \{\
+        ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);\
+      \};\
+      templateImg.src = currentTemplateSrc;\
+    \}\
+\
+    downloadBtn.addEventListener('click', () => \{\
+      const link = document.createElement('a');\
+      link.download = 'combined.png';\
+      link.href = canvas.toDataURL();\
+      link.click();\
+    \});\
+  </script>\
+</body>\
+</html>\
+\pard\pardeftab720\partightenfactor0
+
+\f1\fs26 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Commit changes}
