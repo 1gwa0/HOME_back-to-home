@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>拍攝你的家的味道</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      touch-action: none;
+    }
+    #controls {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      z-index: 10;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      background: rgba(255,255,255,0.9);
+      border-radius: 8px;
+    }
+    #download {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="1080" height="1920"></canvas>
+  <div id="controls">
+    <button onclick="takePhoto(0)">拍照 1</button>
+    <button onclick="takePhoto(1)">拍照 2</button>
+    <button onclick="takePhoto(2)">拍照 3</button>
+    <button onclick="takePhoto(3)">拍照 4</button>
+  </div>
+  <button id="download" onclick="downloadImage()">下載圖片</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <script>
+    const canvas = new fabric.Canvas('canvas', { selection: false });
+    const templateImg = new Image();
+    templateImg.src = './assets/template.png';
+
+    const placeholders = [
+      { left: 150, top: 250, width: 300, height: 300 },
+      { left: 630, top: 250, width: 300, height: 300 },
+      { left: 150, top: 1050, width: 300, height: 300 },
+      { left: 630, top: 1050, width: 300, height: 300 },
+    ];
+
+    const images = [null, null, null, null];
+
+    templateImg.onload = () => {
+      const bg = new fabric.Image(templateImg, {
+        selectable: false,
+        evented: false,
+        width: 1080,
+        height: 1920,
+      });
+      canvas.setBackgroundImage(bg, canvas.renderAll.bind(canvas));
+    };
+
+    async function takePhoto(index) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        await video.play();
+
+        // 等待影像啟動
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const snap = document.createElement('canvas');
+        snap.width = video.videoWidth;
+        snap.height = video.videoHeight;
+        const ctx = snap.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        const img = new Image();
+        img.onload = () => {
+          const fabricImg = new fabric.Image(img, {
+            left: placeholders[index].left,
+            top: placeholders[index].top,
+            scaleX: placeholders[index].width / img.width,
+            scaleY: placeholders[index].height / img.height,
+            hasRotatingPoint: false,
+          });
+          fabricImg.set({ cornerSize: 20 });
+          canvas.add(fabricImg);
+          canvas.setActiveObject(fabricImg);
+          images[index] = fabricImg;
+          canvas.renderAll();
+        };
+        img.src = snap.toDataURL('image/png');
+
+        stream.getTracks().forEach(track => track.stop());
+      } catch (e) {
+        alert('拍照失敗，請允許相機權限');
+      }
+    }
+
+    function downloadImage() {
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      const link = document.createElement('a');
+      link.download = 'my_home_story.png';
+      link.href = canvas.toDataURL({ format: 'png' });
+      link.click();
+    }
+  </script>
+</body>
+</html>
+assets/
+/Users/nicolelee/Downloads/大三/template.png
