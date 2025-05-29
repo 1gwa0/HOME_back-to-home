@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HOME拍照模板</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: #000;
+      overflow: hidden;
+      touch-action: none;
+    }
+    canvas {
+      touch-action: none;
+    }
+    #controls {
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-evenly;
+      z-index: 10;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="1080" height="1920"></canvas>
+  <div id="controls">
+    <button onclick="takePhoto(0)">拍照 1</button>
+    <button onclick="takePhoto(1)">拍照 2</button>
+    <button onclick="takePhoto(2)">拍照 3</button>
+    <button onclick="takePhoto(3)">拍照 4</button>
+    <button onclick="save()">下載</button>
+  </div>
+  <video id="video" autoplay playsinline style="display:none;"></video>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <script>
+    const canvas = new fabric.Canvas('canvas', { selection: false });
+    const imagePositions = [
+      { left: 130, top: 320, scale: 1.2 },
+      { left: 550, top: 400, scale: 1.2 },
+      { left: 120, top: 930, scale: 1.2 },
+      { left: 580, top: 1120, scale: 1.2 }
+    ];
+
+    fabric.Image.fromURL('assets/template.png', function(img) {
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+        scaleX: canvas.width / img.width,
+        scaleY: canvas.height / img.height,
+        originX: 'left',
+        originY: 'top'
+      });
+    });
+
+    const video = document.getElementById('video');
+    const stream = navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    stream.then(s => video.srcObject = s);
+
+    function takePhoto(index) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = video.videoWidth;
+      tempCanvas.height = video.videoHeight;
+      const ctx = tempCanvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      const imgData = tempCanvas.toDataURL('image/png');
+      fabric.Image.fromURL(imgData, function(img) {
+        img.set({
+          left: imagePositions[index].left,
+          top: imagePositions[index].top,
+          scaleX: imagePositions[index].scale,
+          scaleY: imagePositions[index].scale,
+          hasRotatingPoint: false,
+          cornerSize: 20
+        });
+        img.setControlsVisibility({ mtr: false });
+        canvas.add(img);
+        canvas.setActiveObject(img);
+      });
+    }
+
+    function save() {
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      const link = document.createElement('a');
+      link.download = 'home.png';
+      link.href = canvas.toDataURL({
+        format: 'png',
+        multiplier: 1
+      });
+      link.click();
+    }
+  </script>
+</body>
+</html>
