@@ -1,0 +1,84 @@
+<!-- index.html 範例：你可以用這個 -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>多模板圖片合成器</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    canvas { border: 1px solid #ccc; margin-top: 10px; display: block; margin: 10px auto; }
+    .templates img {
+      width: 120px;
+      margin: 5px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 8px;
+    }
+    .templates img.selected { border-color: #f90; }
+  </style>
+</head>
+<body>
+  <h2>上傳照片 → 選擇模板 → 套圖下載</h2>
+  <input type="file" id="upload" accept="image/*" />
+  <div class="templates" id="template-list">
+    <img src="template1.png" data-template="template1.png" class="selected" />
+    <img src="template2.png" data-template="template2.png" />
+  </div>
+  <button id="download">下載圖片</button>
+  <canvas id="canvas" width="800" height="1000"></canvas>
+  <script>
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const downloadBtn = document.getElementById('download');
+    const templateList = document.getElementById('template-list');
+
+    let currentTemplateSrc = 'template1.png';
+    let uploadedImg = null;
+
+    templateList.addEventListener('click', (e) => {
+      if (e.target.tagName === 'IMG') {
+        document.querySelectorAll('.templates img').forEach(img => img.classList.remove('selected'));
+        e.target.classList.add('selected');
+        currentTemplateSrc = e.target.dataset.template;
+        if (uploadedImg) drawCombined();
+      }
+    });
+
+    upload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        uploadedImg = new Image();
+        uploadedImg.onload = () => drawCombined();
+        uploadedImg.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function drawCombined() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scale = Math.min(canvas.width / uploadedImg.width, canvas.height / uploadedImg.height);
+      const imgWidth = uploadedImg.width * scale;
+      const imgHeight = uploadedImg.height * scale;
+      const x = (canvas.width - imgWidth) / 2;
+      const y = (canvas.height - imgHeight) / 2;
+      ctx.drawImage(uploadedImg, x, y, imgWidth, imgHeight);
+
+      const templateImg = new Image();
+      templateImg.onload = () => {
+        ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+      };
+      templateImg.src = currentTemplateSrc;
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'combined.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  </script>
+</body>
+</html>
