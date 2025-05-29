@@ -126,5 +126,4 @@
   </script>
 </body>
 </html>
-assets/
-/Users/nicolelee/Downloads/大三/template.png
+assets/template.png
